@@ -7,7 +7,7 @@ def changeRes():
     script by Gijs de Zwart
     www.studiogijs.nl
     """
-    i=rs.GetReal(number=2, minimum=0.333)
+    i=rs.GetReal(number=2, minimum=0.1)
     vray = rs.GetPlugInObject("V-Ray for Rhino")
     param = vray.Scene().Plugin("/SettingsOutput").Param("img_width")
     param.Value = int(param.Value()*i)
