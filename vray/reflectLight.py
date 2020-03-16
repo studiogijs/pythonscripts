@@ -9,7 +9,7 @@ def reflectLight():
     
     """
     
-    This script will place a (pre)selected light on a surface or polysurface by reflection
+    This script will place a (pre)selected light on a surface, polysurface or mesh face by reflection
     After the script has run, it will select the modified light, so you can quickly repeat
     the placement with this light
     script by Gijs de Zwart
@@ -25,32 +25,40 @@ def reflectLight():
     dir=light.LightGeometry.Direction
      
     
+    obj = rs.GetObject("select surface to reflect light on", filter=40, subobjects=True)
     
-    #rs.AddPoint(camLoc)
-    #rs.AddPoint(camTar)
-    #rs.AddLine([0,0,0],camDir)
-    
-    srf = rs.GetObject("select surface to reflect light on", filter=8, subobjects=True)
-    #rs.GetObjects(
-    if not srf:
+    if not obj:
         return
-    pt = rs.GetPointOnSurface(srf)
-    if not pt:
-        return
-    #if not sc.doc.Views.ActiveView.ActiveViewport.IsPerspectiveProjection:
-    #    print "this script needs a perspective view to start"
-    #    return
+    if type(rs.coercerhinoobject(obj))==Rhino.DocObjects.BrepObject:
+        pt = rs.GetPointOnSurface(obj)
+        if not pt:
+            return
+        pt_srf = rs.SurfaceClosestPoint(obj, pt)
+        if not pt_srf:
+            print "could not find surface point"
+            return
+        normal = rs.SurfaceNormal(obj, pt_srf)
+        if not normal:
+            print "could not calculate surface normal"
+            return
+    else:
+        pt = rs.GetPointOnMesh(obj)
+        if not pt:
+            return
+        pt_mesh, index = rs.MeshClosestPoint(obj, pt)
+        if not pt_mesh:
+            print "could not find mesh point"
+        normals = rs.MeshFaceNormals(obj)
+        if normals:
+            normal = normals[index]
+        if not normal:
+            print "could not calculate surface normal"
+            return
+
     camLoc = sc.doc.Views.ActiveView.ActiveViewport.CameraLocation
     camTar = sc.doc.Views.ActiveView.ActiveViewport.CameraTarget
     camDir = sc.doc.Views.ActiveView.ActiveViewport.CameraDirection
-    pt_srf = rs.SurfaceClosestPoint(srf, pt)
-    if not pt_srf:
-        print "could not find surface point"
-        return
-    normal = rs.SurfaceNormal(srf, pt_srf)
-    if not normal:
-        print "could not calculate surface normal"
-        return
+
     plane = Rhino.Geometry.Plane(pt, normal, -camDir)
     #sc.doc.Views.ActiveView.ActiveViewport.SetConstructionPlane(plane)
     #line = Rhino.Geometry.Line(camLoc, pt)
