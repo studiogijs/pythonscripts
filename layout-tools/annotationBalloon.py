@@ -6,8 +6,7 @@ def annotationBalloon():
     """
     adds leader with text and dot and a table with block name and count.
     tested in Rhino 6 for Windows, won't work in Rhino 5
-    works together with addPartList_v01.py
-    version 0.2
+    works together with addPartList.py
     www.studiogijs.nl
     """
     
@@ -98,7 +97,7 @@ def addEndDot(curve, s):
     
 def getInput():
     """
-    returns the drawn curve, annotation size and value on success, or Falses on failure
+    returns the drawn curve, annotation size and value on success, or False on failure
     """
     s = sc.sticky['annSize'] if sc.sticky.has_key('annSize') else 5 #size of circle radius
     if s==None:
