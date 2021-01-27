@@ -8,7 +8,8 @@ def alignDetails():
     It can match top <-> front both ways
     It can match front <-> right both ways
     The detail border will remain unaffected, in other words, it will be moved too.
-    version 1.0
+    version 1.1
+    update 1.1: bug fixes, page refresh Rhino 7
     www.studiogijs.nl
     """
     #set focus back to page
@@ -60,11 +61,13 @@ def alignDetails():
             DC.CommitChanges()
             
         else:
-            return
+            return False
+        return True
             
     rc = align(DP,DC)
     if not rc:
         print "These two viewports cannot be matched"
     sc.doc.Views.ActiveView.SetPageAsActive()
+    sc.doc.Views.Redraw()
 
 alignDetails()            
