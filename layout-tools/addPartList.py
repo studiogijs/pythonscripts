@@ -5,17 +5,19 @@ import Rhino
 
 def addPartList():
     """
-    create a partlist from blockitems that are numbered with annotationBalloon_v02.py
+    create a partlist from blockitems that are numbered with annotationBalloon.py
     Run the script to update the list at any time, for example after adding
     new balloons or removing balloons
     
-    version 0.2
+    version 0.3
     changes in 0.2: added quotes around block names to make it work in v7 wip
+    changes in 0.3: automatically removes double annotated block items
     www.studiogijs.nl
     """
     
     groups = sc.doc.ActiveDoc.Groups
     partlist = []
+    blocknames=[]
     for group in groups:
         texts=[]
         if group.Name == None or group.GetUserString("group-nr")==None:
@@ -28,7 +30,14 @@ def addPartList():
             texts.append(blockname)
             blockcount = getInstanceCount(blockname)
             texts.append(blockcount)
+        if blockname in blocknames:
+            #skip to add block to list in case of double annotation and delete double annotation balloon
+            rs.UnselectAllObjects()
+            rs.DeleteObjects(sc.doc.ActiveDoc.Groups.GroupMembers(group.Index))
+            rs.DeleteGroup(group.Name)
+            continue
         partlist.append(texts)
+        blocknames.append(blockname)
     createTable(partlist)
 
 def getInstanceCount(name):
@@ -66,6 +75,29 @@ def createTable(partlist):
             
             textobject = sc.doc.Objects.AddText(text, plane, 2.0 ,'Courier New', False, False, just)
             rs.AddObjectToGroup(textobject, "partlistgroup")
+
+    def GetPartlistAlignment():
+    
+        
+        point = Rhino.Geometry.Point3d(0,0,0)
+        listValues = "LowerLeft", "LowerRight", "UpperLeft", "UpperRight"
+        listIndex = 1
+        gp = Rhino.Input.Custom.GetPoint()
+        gp.SetCommandPrompt("Choose alignment and insertion point")
+        opList = gp.AddOptionList("Alignment", listValues, listIndex)
+        while True:
+            get_rc = gp.Get()
+            if gp.CommandResult()!=Rhino.Commands.Result.Success:
+                return point, 0
+            if get_rc==Rhino.Input.GetResult.Point:
+                point = gp.Point()
+                
+            elif get_rc==Rhino.Input.GetResult.Option:
+                if gp.OptionIndex()==opList:
+                  listIndex = gp.Option().CurrentListOptionIndex
+                continue
+            break
+        return point, listIndex
         
     def addBorders(i,y):
         
@@ -104,15 +136,31 @@ def createTable(partlist):
         rs.AddObjectToGroup(line, "partlistgroup")
 
     y = len(partlist)*6
+    #get insertion point
+    point, listIndex = GetPartlistAlignment()
+    if point:
+        target = Rhino.Geometry.Point3d(0,0,0)
+        if listIndex == 0: #lower left
+            target[0] = point[0]
+            target[1] = point[1]
+        elif listIndex == 1: #lower right
+            target[0] =point[0]-(16+twidth)
+            target[1] = point[1]
+        elif listIndex == 2: #upper left
+            target[0] = point[0]
+            target[1] = point[1]-len(partlist)*6
+        else: #upper right
+            target[0] =point[0]-(16+twidth)
+            target[1] = point[1]-len(partlist)*6
+            
     for i, texts in enumerate(partlist):
         addTexts(texts, y)
         addBorders(i, y)
         y-=6
-    #sc.doc.Views.Redraw()
+    
     group= sc.doc.Groups.FindName("partlistgroup")
     objs = sc.doc.ActiveDoc.Groups.GroupMembers(group.Index)
-    
-    rs.MoveObjects(objs, (10,10,0))
+    rs.MoveObjects(objs, (target))
 
 def getRhinoVersion():
     version = str(Rhino.RhinoApp.ExeVersion)
