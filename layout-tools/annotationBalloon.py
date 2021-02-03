@@ -7,6 +7,7 @@ def annotationBalloon():
     adds leader with text and dot and a table with block name and count.
     tested in Rhino 6 for Windows, won't work in Rhino 5
     works together with addPartList.py
+    new in v0.3: annotation dot is now at the end of the leader rather than at the perimeter, bug fixes
     www.studiogijs.nl
     """
     
@@ -70,6 +71,7 @@ def addAnnotationCircle(curve, v, s):
     pt = curve.PointAtEnd
     pt+=vector
     circle = Rhino.Geometry.Circle(pt, s)
+    hatchcurve = circle.ToNurbsCurve()
     circle = sc.doc.Objects.AddCircle(circle)
     curve = sc.doc.Objects.Add(curve)
     text = str(v)
@@ -84,10 +86,7 @@ def addEndDot(curve, s):
     creates a hatched circle at the start of a curve
     """
     d = s/5
-    vector = curve.TangentAtStart
-    vector*=-d
     pt = curve.PointAtStart
-    pt+=vector
     circle = Rhino.Geometry.Circle(pt, d)
     circle = circle.ToNurbsCurve()
     hatch = Rhino.Geometry.Hatch.Create(circle, 0, 0, 0)
@@ -117,7 +116,7 @@ def getInput():
 
 def getPolyline():
     points = rs.GetPoints(draw_lines = True, in_plane = True, max_points = 3)
-    if points:
+    if points and len(points)>1:
         return Rhino.Geometry.Polyline(points)
     else:
         return False
