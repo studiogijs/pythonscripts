@@ -13,8 +13,8 @@ def createProjectedDetail():
     
     known bugs: creating left or right views from top won't work correctly
     projected view is now a parallel view but isn't converted to a named view. Activating the detail and 'panning' will result in rotation of the view
-    version 0.1
-
+    version 0.2
+    new in version 0.2: locked details should now work better
     www.studiogijs.nl
     """
 
@@ -91,8 +91,12 @@ def createProjectedDetail():
             vectY = rs.VectorSubtract(ptUR, ptLR) # up
 
     newdetail = rs.CopyObject(detailview, vectY)
+    d = rs.coercerhinoobject(newdetail)
     
     sc.doc.Views.ActiveView.SetActiveDetail(newdetail)
+    
+    d.DetailGeometry.IsProjectionLocked = False
+    d.CommitChanges()
     if abs(vect.X)>abs(vect.Y): #make horizontal view
         if vect.X<0:
             
@@ -108,7 +112,8 @@ def createProjectedDetail():
         else:
             
             rs.RotateView(direction = 2,angle = 90)#rotate up
-        
+    d.DetailGeometry.IsProjectionLocked = True
+    d.CommitChanges()
     sc.doc.Views.ActiveView.SetPageAsActive()
     sc.doc.Views.Redraw()
 
