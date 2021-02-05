@@ -12,9 +12,14 @@ def createProjectedDetail():
     back from right or left view
     
     known bugs: creating left or right views from top won't work correctly
-    projected view is now a parallel view but isn't converted to a named view. Activating the detail and 'panning' will result in rotation of the view
-    version 0.2
-    new in version 0.2: locked details should now work better
+    
+    version 0.3
+    new in version 0.2:
+        - locked details should now work better
+    new in 0.3:
+        - projected views now have their cplane set to the view, which should result in better behavior when editing the detail
+        - projected views from top or bottom views to right or left are ignored with user message.
+        - message when trying to add projected view from perspective
     www.studiogijs.nl
     """
 
@@ -53,8 +58,13 @@ def createProjectedDetail():
     
     
     detail = rs.coercerhinoobject(detailview)
+    
+    
     if not detail.DetailGeometry.IsParallelProjection:
+        print "Can't make projected views from perspective views"
         return
+    
+    
     #get lower left and lower right and upper right points of selected detail view
     ptLL = Rhino.Geometry.Point3d(0,0,0)
     ptLR = Rhino.Geometry.Point3d(0,0,0)
@@ -93,11 +103,47 @@ def createProjectedDetail():
     newdetail = rs.CopyObject(detailview, vectY)
     d = rs.coercerhinoobject(newdetail)
     
-    sc.doc.Views.ActiveView.SetActiveDetail(newdetail)
+    
+    view = sc.doc.Views.ActiveView
+    view.SetActiveDetail(newdetail)
     
     d.DetailGeometry.IsProjectionLocked = False
+    
+    VP = 0
+    
+    if d.Viewport.CameraZ==Rhino.Geometry.Vector3d(0,0,1):
+        #top view
+        VP=1
+    elif d.Viewport.CameraZ==Rhino.Geometry.Vector3d(0,-1,0):
+        #front view
+        VP=2
+    elif d.Viewport.CameraZ==Rhino.Geometry.Vector3d(1,0,0):
+        #right view
+        VP=3
+    elif d.Viewport.CameraZ==Rhino.Geometry.Vector3d(0,0,-1):
+        #bottom view
+        VP=4
+    elif d.Viewport.CameraZ==Rhino.Geometry.Vector3d(-1,0,0):
+        #left view
+        VP=5
+    elif d.Viewport.CameraZ==Rhino.Geometry.Vector3d(0,1,0):
+        #back view
+        VP=6
+    else:
+        return
     d.CommitChanges()
     if abs(vect.X)>abs(vect.Y): #make horizontal view
+        if VP==1 or VP==4:
+            print"Can't make a right view of this view, try to make them from front, right, left or back views"
+            rs.DeleteObject(newdetail)
+            return
+        if VP==2 or VP==6:
+            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.XAxis)
+            rs.ViewCPlane(plane = newplane)
+        elif VP==3 or VP==5:
+            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.YAxis)
+            rs.ViewCPlane(plane = newplane)
+    
         if vect.X<0:
             
             rs.RotateView(direction = 0,angle = 90)#rotate left
@@ -106,13 +152,17 @@ def createProjectedDetail():
             rs.RotateView(direction = 1,angle = 90)#rotate right
         
     else:
+        if VP==1 or VP==4:
+            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.YAxis)
+            rs.ViewCPlane(plane = newplane)
+        elif VP==2 or VP==3 or VP==5 or VP==6:
+            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.ZAxis)
+            rs.ViewCPlane(plane = newplane)
         if vect.Y<0:
-            
             rs.RotateView(direction = 3,angle = 90)#rotate down
-        else:
-            
+        else:#Y>0
             rs.RotateView(direction = 2,angle = 90)#rotate up
-    d.DetailGeometry.IsProjectionLocked = True
+    #d.DetailGeometry.IsProjectionLocked = True
     d.CommitChanges()
     sc.doc.Views.ActiveView.SetPageAsActive()
     sc.doc.Views.Redraw()
