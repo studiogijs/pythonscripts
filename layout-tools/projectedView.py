@@ -248,13 +248,15 @@ def createProjectedDetail():
             rs.RotateView(direction = 3,angle = 90)#rotate down
         else:#Y>0
             rs.RotateView(direction = 2,angle = 90)#rotate up
-    d.DetailGeometry.IsProjectionLocked = lockedstate
+    
     viewport = d.Viewport
     title = viewport.Name
     viewport.Name = newViewportName
+    d.DetailGeometry.IsProjectionLocked = lockedstate
     d.CommitViewportChanges()
     d.CommitChanges()
     sc.doc.Views.ActiveView.SetPageAsActive()
+    sc.doc.Views.Redraw()
     restoreOsnap()
     sc.doc.Views.Redraw()
     
