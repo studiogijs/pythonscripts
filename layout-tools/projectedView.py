@@ -12,7 +12,8 @@ def createProjectedDetail():
     back from right or left view
     
     version 0.6
-    new in version 0.2:
+    
+    new in 0.2:
         - locked details should now work better
     new in 0.3:
         - projected views now have their cplane set to the view, which should result in better behavior when editing the detail
@@ -133,7 +134,6 @@ def createProjectedDetail():
     newdetail = rs.CopyObject(detail_obj, vectY)
     d = rs.coercerhinoobject(newdetail)
     lockedstate = d.DetailGeometry.IsProjectionLocked
-    print lockedstate
     d.DetailGeometry.IsProjectionLocked = False
     d.CommitViewportChanges()
     d.CommitChanges()
@@ -249,7 +249,6 @@ def createProjectedDetail():
         else:#Y>0
             rs.RotateView(direction = 2,angle = 90)#rotate up
     d.DetailGeometry.IsProjectionLocked = lockedstate
-    print d.DetailGeometry.IsProjectionLocked 
     viewport = d.Viewport
     title = viewport.Name
     viewport.Name = newViewportName
