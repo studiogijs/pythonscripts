@@ -11,7 +11,7 @@ def createProjectedDetail():
     left/right from front view
     back from right or left view
     
-    version 0.5
+    version 0.6
     new in version 0.2:
         - locked details should now work better
     new in 0.3:
@@ -23,6 +23,8 @@ def createProjectedDetail():
     new in 0.5:
         - new detail preview now snaps to the selected detail, to make it more clear where it ends
         - temporarily disable osnaps during operation
+    new in 0.6:
+        - fixed a bug that prevented the projection to be altered when the selected detail was locked
         
     www.studiogijs.nl
     """
@@ -130,11 +132,16 @@ def createProjectedDetail():
 
     newdetail = rs.CopyObject(detail_obj, vectY)
     d = rs.coercerhinoobject(newdetail)
+    lockedstate = d.DetailGeometry.IsProjectionLocked
+    print lockedstate
+    d.DetailGeometry.IsProjectionLocked = False
+    d.CommitViewportChanges()
+    d.CommitChanges()
     
     view = sc.doc.Views.ActiveView
     view.SetActiveDetail(newdetail)
     
-    d.DetailGeometry.IsProjectionLocked = False
+    
     
     VP = 0
     newViewportName = ""
@@ -241,11 +248,13 @@ def createProjectedDetail():
             rs.RotateView(direction = 3,angle = 90)#rotate down
         else:#Y>0
             rs.RotateView(direction = 2,angle = 90)#rotate up
-    #d.DetailGeometry.IsProjectionLocked = True
+    d.DetailGeometry.IsProjectionLocked = lockedstate
+    print d.DetailGeometry.IsProjectionLocked 
     viewport = d.Viewport
     title = viewport.Name
     viewport.Name = newViewportName
     d.CommitViewportChanges()
+    d.CommitChanges()
     sc.doc.Views.ActiveView.SetPageAsActive()
     restoreOsnap()
     sc.doc.Views.Redraw()
