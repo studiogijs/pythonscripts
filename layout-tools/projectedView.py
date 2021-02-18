@@ -4,7 +4,6 @@ import rhinoscriptsyntax as rs
 from System.Drawing import Color
 from Rhino.Geometry import *
 
-
 def createProjectedDetail():
     """
     This script will create a projected view from a selected detail
@@ -12,7 +11,7 @@ def createProjectedDetail():
     left/right from front view
     back from right or left view
     
-    version 0.4
+    version 0.5
     new in version 0.2:
         - locked details should now work better
     new in 0.3:
@@ -21,35 +20,54 @@ def createProjectedDetail():
         - message when trying to add projected view from perspective
     new in 0.4:
         - new details now have their title correctly set to the actual view projection
+    new in 0.5:
+        - new detail preview now snaps to the selected detail, to make it more clear where it ends
+        - temporarily disable osnaps during operation
+        
     www.studiogijs.nl
     """
-
+    def restoreOsnap():
+        #restore osnapmode
+        Rhino.ApplicationSettings.ModelAidSettings.Osnap = osnap
     def OnDynamicDraw(sender, e):
-
-        vec = e.CurrentPoint-basept
-        translate = vec
-        xf = Transform.Translation(translate)
         plane = Plane(ptLL, Plane.WorldXY.ZAxis)
         sizeX = ptLR.X-ptLL.X #width of selected detail
         sizeY = ptUR.Y-ptLR.Y #height of selected detail
+        
+        vec = e.CurrentPoint-basept
+        if abs(vec.X)>abs(vec.Y):
+            if vec.X>0:
+                translate = Vector3d(sizeX,0,0)
+            else:
+                translate = Vector3d(-sizeX,0,0)
+        elif abs(vec.Y)>abs(vec.X):
+            if vec.Y>0:
+                translate = Vector3d(0,sizeY,0,)
+            else:
+                translate = Vector3d(0,-sizeY,0)
+        else:
+            translate = vec
+        xf = Transform.Translation(translate)
+        
+        
         newobj = Rectangle3d(plane,sizeX,sizeY)
         crv  = newobj.ToNurbsCurve()
         
         preview=crv.Duplicate()
         preview.Transform(xf)
         e.Display.DrawCurve(preview, Color.LightCyan, 2)
-
-
+        
     def getPoint():
+        
         while True:
             result = gp.Get()
+            
             if result == Rhino.Input.GetResult.Point:
                 #count=optInt.CurrentValue
                 line = Rhino.Geometry.Line(basept, gp.Point())
                 return line
             break
-
- 
+    
     #set focus page and select detail
     pageview = sc.doc.Views.ActiveView
     pageview.SetPageAsActive()
@@ -83,11 +101,18 @@ def createProjectedDetail():
     basept = (ptLL + ptUR)/2 #center of Detail view
     
     gp=Rhino.Input.Custom.GetPoint()
+    
+    
     gp.SetCommandPrompt("where to add projected view")
 
     gp.DynamicDraw += OnDynamicDraw
+    
+    #temporarily disable osnaps if enabled
+    osnap = Rhino.ApplicationSettings.ModelAidSettings.Osnap
+    Rhino.ApplicationSettings.ModelAidSettings.Osnap = False
     line = getPoint()
     if not line:
+        restoreOsnap()
         return
     vect = line.To - basept
     
@@ -139,12 +164,14 @@ def createProjectedDetail():
         viewportname = "back"
         VP=6
     else:
+        restoreOsnap()
         return
     
     if abs(vect.X)>abs(vect.Y): #make horizontal view
         if VP==1 or VP==4:
             print"Can't make a correct projection of this view, try to make them from front, right, left or back views"
             rs.DeleteObject(newdetail)
+            restoreOsnap()
             return
         if VP==2 or VP==6:
             newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.XAxis)
@@ -220,7 +247,9 @@ def createProjectedDetail():
     viewport.Name = newViewportName
     d.CommitViewportChanges()
     sc.doc.Views.ActiveView.SetPageAsActive()
+    restoreOsnap()
     sc.doc.Views.Redraw()
+    
 
 
 if __name__=="__main__":
