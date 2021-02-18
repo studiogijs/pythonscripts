@@ -256,7 +256,6 @@ def createProjectedDetail():
     d.CommitViewportChanges()
     d.CommitChanges()
     sc.doc.Views.ActiveView.SetPageAsActive()
-    sc.doc.Views.Redraw()
     restoreOsnap()
     sc.doc.Views.Redraw()
     
