@@ -6,13 +6,12 @@ import System
 def guessHorizontalShift():
     
     """
-    This script will correct the horizontal distortion and set in the V-Ray Camera
+    This script will correct the horizontal distortion and set it in the V-Ray Camera.
+    It levels the camera for this correction to work well and resets
+    lens shift (vertical shift) to 0
     Works with V-Ray 5.1
-    front/back from top view
-    left/right from front view
-    back from right or left view
-    
-    version 0.1
+        
+    version 0.2
         
     www.studiogijs.nl
     """
@@ -51,5 +50,6 @@ def guessHorizontalShift():
     
     rv = rs.GetPlugInObject("V-Ray for Rhino").Scene().Plugin("/CameraPhysical")
     rv.Param("horizontal_shift").Value = factor
+    rv.Param("lens_shift").Value = 0
     rs.Redraw()
 guessHorizontalShift()
