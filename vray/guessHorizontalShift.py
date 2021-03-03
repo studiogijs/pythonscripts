@@ -3,6 +3,16 @@ import rhinoscriptsyntax as rs
 import math
 import System
 
+def Main(option):
+    if option == 0:
+        guessHorizontalShift()
+    if option == 1:
+        resetHorizontalShift()
+    if option == 2:
+        printHorizontalShift()
+    else:
+        return
+
 def guessHorizontalShift():
     
     """
@@ -11,7 +21,7 @@ def guessHorizontalShift():
     lens shift (vertical shift) to 0
     Works with V-Ray 5.1
         
-    version 0.2
+    version 0.3
         
     www.studiogijs.nl
     """
@@ -50,6 +60,18 @@ def guessHorizontalShift():
     
     rv = rs.GetPlugInObject("V-Ray for Rhino").Scene().Plugin("/CameraPhysical")
     rv.Param("horizontal_shift").Value = factor
+    print "Horizontal shift factor set to %r." %factor
     rv.Param("lens_shift").Value = 0
     rs.Redraw()
-guessHorizontalShift()
+    
+def resetHorizontalShift():
+    rv = rs.GetPlugInObject("V-Ray for Rhino").Scene().Plugin("/CameraPhysical")
+    rv.Param("horizontal_shift").Value = 0
+
+def printHorizontalShift():
+    rv = rs.GetPlugInObject("V-Ray for Rhino").Scene().Plugin("/CameraPhysical")
+    print rv.Param("horizontal_shift").Value()
+    
+if __name__ == "__main__":
+    option = rs.GetInteger("0 guessHorizontalShift | 1 resetHorizontalShift | 2:printHorizontalShift ",number=0)
+    Main(option)
