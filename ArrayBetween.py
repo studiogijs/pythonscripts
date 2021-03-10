@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 This script allows you array curves, surfaces and polysurfaces, from object
 boundingbox center or corners to a picked point, where the new objects will get
