@@ -99,11 +99,13 @@ def ArrayBetween():
 
 
     docobj = rs.GetObject("select object to array", 28)
+    if not docobj: return
     if rs.IsCurve(docobj):
         obj=rs.coercecurve(docobj)
     if rs.IsBrep(docobj):
         obj=rs.coercebrep(docobj)
-    if not obj: return
+    if not obj:
+        return
 
     plane=Rhino.Geometry.Plane.WorldXY
     bb=obj.GetBoundingBox(plane)
