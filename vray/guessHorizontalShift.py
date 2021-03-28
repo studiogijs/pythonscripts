@@ -21,7 +21,7 @@ def guessHorizontalShift():
     lens shift (vertical shift) to 0
     Works with V-Ray 5.1
         
-    version 0.3
+    version 0.4
         
     www.studiogijs.nl
     """
@@ -52,10 +52,10 @@ def guessHorizontalShift():
             break
     
     if 0 <= angle < math.pi/4:
-        factor = math.sin(angle)
+        factor = math.tan(angle)
         
     if math.pi/4 <= angle < math.pi/2:
-        factor = -math.cos(angle)
+        factor = -math.tan(math.pi/2-angle)
         
     
     rv = rs.GetPlugInObject("V-Ray for Rhino").Scene().Plugin("/CameraPhysical")
