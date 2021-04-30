@@ -8,9 +8,11 @@ def alignDetails():
     It can match top <-> front both ways
     It can match front <-> right both ways
     The detail border will remain unaffected, in other words, it will be moved too.
-    version 1.1
+    version 1.3
     update 1.1: bug fixes, page refresh Rhino 7
     update 1.2: added matching left to front
+    update 1.3: added matching of other orthogonal views
+    
     www.studiogijs.nl
     """
     #set focus back to page
@@ -35,7 +37,7 @@ def alignDetails():
             return False
         if DC.DetailGeometry.IsParallelProjection:
             sc.doc.Views.ActiveView.SetActiveDetail(DC.Id)
-            print DP.Viewport.CameraZ.X, DC.Viewport.CameraZ.Y
+            
             #check if right type of viewports are being attempted to match
             if (DP.Viewport.CameraZ.Z == 1 and DC.Viewport.CameraZ.Y == -1): #match front to top
                 vertical = True
@@ -48,6 +50,14 @@ def alignDetails():
             elif (DP.Viewport.CameraZ.Y == -1 and DC.Viewport.CameraZ.X == -1): #match left to front
                 vertical = False
             elif (DC.Viewport.CameraZ.Y == -1 and DP.Viewport.CameraZ.X == -1): #match front to left
+                vertical = False
+            elif (DP.Viewport.CameraZ.X == 1 and DC.Viewport.CameraZ.Y == 1): #match back to right
+                vertical = False
+            elif (DP.Viewport.CameraZ.Y == 1 and DC.Viewport.CameraZ.X == 1): #match right to back
+                vertical = False
+            elif (DP.Viewport.CameraZ.Y == 1 and DC.Viewport.CameraZ.X == -1): #match left to back
+                vertical = False
+            elif (DP.Viewport.CameraZ.X == -1 and DC.Viewport.CameraZ.Y == 1): #match back to left
                 vertical = False
             else:
                 return False

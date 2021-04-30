@@ -3,6 +3,8 @@ import scriptcontext as sc
 import rhinoscriptsyntax as rs
 from System.Drawing import Color
 from Rhino.Geometry import *
+from math import pi as pi
+from System.Drawing import Size
 
 def createProjectedDetail():
     """
@@ -32,22 +34,116 @@ def createProjectedDetail():
     def restoreOsnap():
         #restore osnapmode
         Rhino.ApplicationSettings.ModelAidSettings.Osnap = osnap
+        
+    def rotateViewport(vect):
+        angle = pi/2
+        if Rhino.ApplicationSettings.ViewSettings.RotateReverseKeyboard: angle = -angle
+        if abs(vect.X)>abs(vect.Y): #make horizontal view
+            if VP==1 or VP==4:
+                print"Can't make a correct projection of this view on left or right"
+                rs.DeleteObject(newdetail)
+                restoreOsnap()
+                return
+                pass
+            if VP==2 or VP==6:
+                newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.XAxis)
+                view.ActiveViewport.SetConstructionPlane(newplane)
+                if viewportname == "front":
+                    if vect.X<0:
+                        #left view from front
+                        newViewportName = "Left"
+                    else:
+                        newViewportName = "Right"
+                
+                if viewportname == "back":
+                    if vect.X<0:
+                        #left view from back
+                        newViewportName = "Right"
+                    else:
+                        newViewportName = "Left"
+                
+            elif VP==3 or VP==5:
+                newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.YAxis)
+                view.ActiveViewport.SetConstructionPlane(newplane)
+                if viewportname == "left":
+                    if vect.X<0:
+                        #left view from left
+                        newViewportName = "Back"
+                    else:
+                        newViewportName = "Front"
+                if viewportname == "right":
+                    if vect.X<0:
+                        #left view from right
+                        newViewportName = "Front"
+                    else:
+                        newViewportName = "Back"
+        
+            if vect.X<0:
+                view.ActiveViewport.KeyboardRotate(True,angle)#rotate left
+            else:
+                view.ActiveViewport.KeyboardRotate(True,-angle)#rotate right
+            
+        else:
+            if VP==1 or VP==4:
+                newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.YAxis)
+                view.ActiveViewport.SetConstructionPlane(newplane)
+                if viewportname == "top":
+                    if vect.Y<0:
+                        #front view from top
+                        newViewportName = "Front"
+                    else:
+                        newViewportName = "Back"
+                if viewportname == "bottom":
+                    if vect.Y<0:
+                        #back view from bottom
+                        newViewportName = "Back"
+                    else:
+                        newViewportName = "Front"
+            elif VP==2 or VP==3 or VP==5 or VP==6:
+                newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.ZAxis)
+                view.ActiveViewport.SetConstructionPlane(newplane)
+                if vect.Y<0:
+                    #bottom view from front, right, left or back
+                    newViewportName = "Bottom"
+                else:
+                    newViewportName = "Top"
+            if vect.Y<0:
+                view.ActiveViewport.KeyboardRotate(False,angle)#rotate down
+            else:#Y>0
+                view.ActiveViewport.KeyboardRotate(False,-angle)#rotate up
+    global rot
+    rot=""
     def OnDynamicDraw(sender, e):
         plane = Plane(ptLL, Plane.WorldXY.ZAxis)
         sizeX = ptLR.X-ptLL.X #width of selected detail
         sizeY = ptUR.Y-ptLR.Y #height of selected detail
+        global rot
+        
         
         vec = e.CurrentPoint-basept
+        size = Size(sizeX, sizeY)
+        global viewport
         if abs(vec.X)>abs(vec.Y):
             if vec.X>0:
                 translate = Vector3d(sizeX,0,0)
+                if rot!="right":
+                    rot="right"
             else:
                 translate = Vector3d(-sizeX,0,0)
+                if rot!="left":
+                    rot="left"
         elif abs(vec.Y)>abs(vec.X):
             if vec.Y>0:
                 translate = Vector3d(0,sizeY,0,)
+                if rot!="up":
+                    rot="up"
             else:
                 translate = Vector3d(0,-sizeY,0)
+                if rot!="down":
+                    rot="down"
+                    #rotateViewport(vec)
+                    bitmap = e.Display.DrawToBitmap(viewport, sizeX, sizeY)
+                    
         else:
             translate = vec
         xf = Transform.Translation(translate)
@@ -60,6 +156,8 @@ def createProjectedDetail():
         preview.Transform(xf)
         e.Display.DrawCurve(preview, Color.LightCyan, 2)
         
+        e.Display.DrawBitmap(bitmap, 0,0)
+        
     def getPoint():
         
         while True:
@@ -70,6 +168,8 @@ def createProjectedDetail():
                 line = Rhino.Geometry.Line(basept, gp.Point())
                 return line
             break
+    ########################
+    
     
     #set focus page and select detail
     pageview = sc.doc.Views.ActiveView
@@ -82,11 +182,10 @@ def createProjectedDetail():
     detail_obj = objref.Object()
     if not isinstance(detail_obj, Rhino.DocObjects.DetailViewObject):
         return
+    global viewport
     viewport = detail_obj.Viewport
     
-    if not viewport.IsParallelProjection:
-        print "Can't make projected views from perspective views"
-        return
+
     
     
     #get lower left and lower right and upper right points of selected detail view
@@ -104,15 +203,17 @@ def createProjectedDetail():
     basept = (ptLL + ptUR)/2 #center of Detail view
     
     gp=Rhino.Input.Custom.GetPoint()
-    
-    
     gp.SetCommandPrompt("where to add projected view")
-
     gp.DynamicDraw += OnDynamicDraw
     
     #temporarily disable osnaps if enabled
     osnap = Rhino.ApplicationSettings.ModelAidSettings.Osnap
     Rhino.ApplicationSettings.ModelAidSettings.Osnap = False
+
+    
+    
+    
+    
     line = getPoint()
     if not line:
         restoreOsnap()
@@ -122,16 +223,17 @@ def createProjectedDetail():
 
     if abs(vect.X)>abs(vect.Y): #add view to left or right of selected detail
         if vect.X<0: #add view left
-            vectY = rs.VectorSubtract(ptLL, ptLR) # to the left
+            detail_move = rs.VectorSubtract(ptLL, ptLR) # to the left
         else:
-            vectY = rs.VectorSubtract(ptLR, ptLL) # to the right
+            detail_move = rs.VectorSubtract(ptLR, ptLL) # to the right
     else: #add view on top or bottom of selected detail
         if vect.Y<0:  #add view down
-            vectY = rs.VectorSubtract(ptLR, ptUR) # down
+            detail_move = rs.VectorSubtract(ptLR, ptUR) # down
         else:
-            vectY = rs.VectorSubtract(ptUR, ptLR) # up
+            detail_move = rs.VectorSubtract(ptUR, ptLR) # up
 
-    newdetail = rs.CopyObject(detail_obj, vectY)
+    rs.EnableRedraw(False)
+    newdetail = rs.CopyObject(detail_obj, detail_move)
     d = rs.coercerhinoobject(newdetail)
     lockedstate = d.DetailGeometry.IsProjectionLocked
     d.DetailGeometry.IsProjectionLocked = False
@@ -141,9 +243,8 @@ def createProjectedDetail():
     view = sc.doc.Views.ActiveView
     view.SetActiveDetail(newdetail)
     
-    
-    
     VP = 0
+    
     newViewportName = ""
     
     if d.Viewport.CameraZ==Rhino.Geometry.Vector3d(0,0,1):
@@ -174,81 +275,12 @@ def createProjectedDetail():
         restoreOsnap()
         return
     
-    if abs(vect.X)>abs(vect.Y): #make horizontal view
-        if VP==1 or VP==4:
-            print"Can't make a correct projection of this view, try to make them from front, right, left or back views"
-            rs.DeleteObject(newdetail)
-            restoreOsnap()
-            return
-        if VP==2 or VP==6:
-            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.XAxis)
-            rs.ViewCPlane(plane = newplane)
-            if viewportname == "front":
-                if vect.X<0:
-                    #left view from front
-                    newViewportName = "Left"
-                else:
-                    newViewportName = "Right"
-            
-            if viewportname == "back":
-                if vect.X<0:
-                    #left view from back
-                    newViewportName = "Right"
-                else:
-                    newViewportName = "Left"
-            
-        elif VP==3 or VP==5:
-            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.YAxis)
-            rs.ViewCPlane(plane = newplane)
-            if viewportname == "left":
-                if vect.X<0:
-                    #left view from left
-                    newViewportName = "Back"
-                else:
-                    newViewportName = "Front"
-            if viewportname == "right":
-                if vect.X<0:
-                    #left view from right
-                    newViewportName = "Front"
-                else:
-                    newViewportName = "Back"
     
-        if vect.X<0:
-            
-            rs.RotateView(direction = 0,angle = 90)#rotate left
-        else:
-            
-            rs.RotateView(direction = 1,angle = 90)#rotate right
-        
-    else:
-        if VP==1 or VP==4:
-            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.YAxis)
-            rs.ViewCPlane(plane = newplane)
-            if viewportname == "top":
-                if vect.Y<0:
-                    #front view from top
-                    newViewportName = "Front"
-                else:
-                    newViewportName = "Back"
-            if viewportname == "bottom":
-                if vect.Y<0:
-                    #back view from bottom
-                    newViewportName = "Back"
-                else:
-                    newViewportName = "Front"
-        elif VP==2 or VP==3 or VP==5 or VP==6:
-            newplane = Rhino.Geometry.Plane(Rhino.Geometry.Point3d.Origin, Rhino.Geometry.Plane.WorldXY.ZAxis)
-            rs.ViewCPlane(plane = newplane)
-            if vect.Y<0:
-                #bottom view from front, right, left or back
-                newViewportName = "Bottom"
-            else:
-                newViewportName = "Top"
-        if vect.Y<0:
-            rs.RotateView(direction = 3,angle = 90)#rotate down
-        else:#Y>0
-            rs.RotateView(direction = 2,angle = 90)#rotate up
     
+
+    
+    
+    rotateViewport(vect)
     viewport = d.Viewport
     title = viewport.Name
     viewport.Name = newViewportName
@@ -258,6 +290,7 @@ def createProjectedDetail():
     sc.doc.Views.ActiveView.SetPageAsActive()
     restoreOsnap()
     sc.doc.Views.Redraw()
+    rs.EnableRedraw(True)
     
 
 
