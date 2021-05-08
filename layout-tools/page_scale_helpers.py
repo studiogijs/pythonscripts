@@ -9,15 +9,14 @@ def select_scale():
     """
     pageview = sc.doc.Views.ActiveView
     pageview.SetPageAsActive()
-    id = str(pageview.ActiveViewportID)
-    page_scale = Rhino.Runtime.TextFields.LayoutUserText(id, "page_scale")
+    page_scale = pageview.ActiveViewport.GetUserString("page_scale")
     scales = ["1:100","1:50","1:20","1:10","1:5","1:2","1:1","2:1","5:1","10:1"]
-    if (not page_scale) or (page_scale not in scales):
+    if (page_scale==None) or (page_scale not in scales):
         value = rs.ListBox(scales, "Select scale", "Scale", "1:5")
     else:
         value = rs.ListBox(scales, "Select scale", "Scale", page_scale)
     if not value:
-        return
+        return False
     else:
         return value
 
@@ -36,7 +35,7 @@ def change_page_scale():
     if not value:
         return
     view_port.SetUserString("page_scale",value)
-    page_scale = Rhino.Runtime.TextFields.LayoutUserText(id, "page_scale")
+    page_scale = pageview.ActiveViewport.GetUserString("page_scale")
     return page_scale
 
 
@@ -61,7 +60,7 @@ def get_scale(readable_scale):
     if readable_scale =="10:1": scale = 10.0
     #leave any other readable ratio that doesn't fit the bill
     if not scale:
-        return
+        return False
     else:
         return scale
         
@@ -71,7 +70,7 @@ def set_detail_scale(detail, scale):
         detail (DetailViewObject, the detail to change)
         scale (float, the scale to set the detail to)
     changes detail's scale
-    void function
+    returns True on succes
     """
     
     #modify the scale
@@ -85,9 +84,6 @@ def set_detail_scale(detail, scale):
     attribs.SetUserString("detail_scale", readable_scale)
     sc.doc.Objects.ModifyAttributes(detail.Id, attribs, True)
     
-    #detail.SetUserString("detail_scale", readable_scale)
-    
-    
     detail.DetailGeometry.SetScale(1, sc.doc.ModelUnitSystem, scale, sc.doc.PageUnitSystem)
     #lock detail
     detail.DetailGeometry.IsProjectionLocked = True
@@ -96,4 +92,5 @@ def set_detail_scale(detail, scale):
     #set focus back to page
     pageview.SetPageAsActive()
     sc.doc.Views.Redraw()
+    return True
     

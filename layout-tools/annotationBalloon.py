@@ -1,67 +1,50 @@
 import rhinoscriptsyntax as rs
 import Rhino
 import scriptcontext as sc
+def get_block_index(blockname):
+    #blockcount = sc.doc.ActiveDoc.InstanceDefinitions.ActiveCount
+    blocks = sc.doc.ActiveDoc.InstanceDefinitions
+    blocknames=[]
+    for block in blocks:
+        if block.Name!= None and block.Name!="titleblock":
+            blocknames.append(block.Name)
+    return blocknames.index(blockname)
+    
 
 def annotationBalloon():
     """
-    adds leader with text and dot and a table with block name and count.
-    tested in Rhino 6 for Windows, won't work in Rhino 5
-    works together with addPartList.py
-    new in v0.3: annotation dot is now at the end of the leader rather than at the perimeter, bug fixes
+    Adds a numbered balloon to the document based on the numbering in part list.
+    Works only with block items, similar to how this works in 'solid modelers'
+    on parts in assemblies
     www.studiogijs.nl
     """
     
     name = getBlockName()
     if not name:
         return
-    curve, v, size = getInput()
-    if curve and v and size:
-        aCircle, aText, aCurve = addAnnotationCircle(curve, v, size)
+    block_nr = get_block_index(name)+1 
+    
+    curve, size = getInput()
+    if curve and size:
+        aCircle, aText, aCurve = addAnnotationCircle(curve, block_nr, size)
         aEndDot = addEndDot(curve, size)
     else:
         return
     #create annotation object
-    groupname = 'annotation-object_'+str(v)
+    groupname = 'annotation-object_'+str(block_nr)
     rs.AddGroup(groupname)
     rs.AddObjectsToGroup([aCircle, aText, aCurve, aEndDot], groupname)
     
     groups = sc.doc.ActiveDoc.Groups
     for group in groups:
         if group.Name == groupname:
-            group.SetUserString("group-nr", str(v))
+            group.SetUserString("group-nr", str(block_nr))
             group.SetUserString("block-name", name)
     
-    #count = getInstanceCount(name)
-    #texts = [str(v),name,count]
-    
-    
-    #pt_x = (v-1)*6+20 # increase leading
-    #addTexts(texts, pt_x)
-    #addBorders(v)
+   
 
-def getFreeSlot():
-    
-    groups = sc.doc.ActiveDoc.Groups
-    free=0
-    if groups==None:
-        return 1
-    for group in groups:
-        #print group.Id
-        
-        if group.Name == None or group.GetUserString("group-nr")==None:
-            continue
-        else:
-            free +=1
-        if sc.doc.Groups.GroupObjectCount(group.Index) == 0:
-            #print "slot ", group.GetUserString("group-nr") ,"is free"
-            return free
-        #else:
-            #print "slot " , group.GetUserString("group-nr"), "is in use"
-        
-    free+=1
-    return free
 
-def addAnnotationCircle(curve, v, s):
+def addAnnotationCircle(curve, block_nr, s):
     """
     adds a circle with text at user specified size to the end of a curve
     returns circle and number
@@ -74,7 +57,7 @@ def addAnnotationCircle(curve, v, s):
     hatchcurve = circle.ToNurbsCurve()
     circle = sc.doc.Objects.AddCircle(circle)
     curve = sc.doc.Objects.Add(curve)
-    text = str(v)
+    text = str(block_nr)
     plane = Rhino.Geometry.Plane.WorldXY
     plane.Origin = pt
     just = Rhino.Geometry.TextJustification.MiddleCenter
@@ -103,25 +86,24 @@ def getInput():
         s=5
     size = rs.GetInteger("size of annotation", s, 3)
     sc.sticky['annSize'] = size
-    #v = sc.sticky["itemNr"] if sc.sticky.has_key("itemNr") else 1 #value to display
-    v=getFreeSlot()
-    #startvalue = rs.GetInteger("modify start value or press enter for next",v, 1 )
     curve = getPolyline()
-    #v=startvalue
-    
-    if not curve:
-        return False, False, False
-    curve = curve.ToNurbsCurve()
-    return curve, v, size
+        
+    if curve:
+        curve = curve.ToNurbsCurve()
+        return curve, size
+    return False, False
 
 def getPolyline():
     points = rs.GetPoints(draw_lines = True, in_plane = True, max_points = 3)
     if points and len(points)>1:
         return Rhino.Geometry.Polyline(points)
-    else:
-        return False
+    return False
 
 def getBlockName():
+    """
+    input: user input selected block
+    returns block name on succes
+    """
     go = Rhino.Input.Custom.GetObject()
     go.SetCommandPrompt("Select block instance to annotate")
     go.GeometryFilter = Rhino.DocObjects.ObjectType.InstanceReference
@@ -134,6 +116,7 @@ def getBlockName():
         obj = objref.Object()
         name = rs.BlockInstanceName(obj.Id)
         return name
+    return False
 
 if __name__ == '__main__':
     annotationBalloon()

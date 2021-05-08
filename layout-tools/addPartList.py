@@ -3,50 +3,52 @@ import scriptcontext as sc
 import Rhino
 
 
-def addPartList():
+def main():
     """
-    create a partlist from blockitems that are numbered with annotationBalloon.py
-    Run the script to update the list at any time, for example after adding
-    new balloons or removing balloons
-    
-    version 0.3
-    changes in 0.2: added quotes around block names to make it work in v7 wip
-    changes in 0.3: automatically removes double annotated block items
+    create part list for all blocks in a document. Numbers will correspond with 
+    balloons, but balloons don't need to be present for the table to be generated
     www.studiogijs.nl
     """
     
     groups = sc.doc.ActiveDoc.Groups
     partlist = []
-    blocknames=[]
-    for group in groups:
-        texts=[]
-        if group.Name == None or group.GetUserString("group-nr")==None:
-            continue
-        elif sc.doc.ActiveDoc.Groups.GroupObjectCount(group.Index) == 0:
-            continue
-        else:
-            texts.append(group.GetUserString("group-nr"))
-            blockname = group.GetUserString("block-name")
-            texts.append(blockname)
-            blockcount = getInstanceCount(blockname)
-            texts.append(blockcount)
-        if blockname in blocknames:
-            #skip to add block to list in case of double annotation and delete double annotation balloon
-            rs.UnselectAllObjects()
-            rs.DeleteObjects(sc.doc.ActiveDoc.Groups.GroupMembers(group.Index))
-            rs.DeleteGroup(group.Name)
-            continue
+    texts = []
+    blocknames=get_block_names()
+    for block_nr, blockname in enumerate(blocknames,1):
+        texts.append(str(block_nr))
+        texts.append(blockname)
+        blockcount = get_block_count(blockname)
+        texts.append(str(blockcount))
+
         partlist.append(texts)
-        blocknames.append(blockname)
+        texts=[]
     createTable(partlist)
 
-def getInstanceCount(name):
-    version = getRhinoVersion()
-    if version ==5:
-        count = str(rs.BlockInstanceCount(name))
-    else:
-        count = "%<BlockInstanceCount(\""+name+"\")>%"
-    return count
+def get_block_index(blockname):
+    blocknames = get_block_names()
+    if blocknames:
+        return blocknames.index(blockname)
+    return False
+def get_block_count(blockname):
+    #blockcount = sc.doc.ActiveDoc.InstanceDefinitions.ActiveCount
+    blocks = sc.doc.ActiveDoc.InstanceDefinitions
+    blocknames=[]
+    for block in blocks:
+        if block.Name==blockname:
+            return block.UseCount()
+    return False
+    
+def get_block_names():
+
+    blocks = sc.doc.ActiveDoc.InstanceDefinitions
+    blocknames=[]
+    for block in blocks:
+        if block.Name!= None and block.Name!="titleblock":
+            blocknames.append(block.Name)
+    
+    if len(blocknames)>0:
+       return blocknames
+    return False
 
 def createTable(partlist):
     if not "partlistgroup" in rs.GroupNames():
@@ -162,18 +164,7 @@ def createTable(partlist):
     objs = sc.doc.ActiveDoc.Groups.GroupMembers(group.Index)
     rs.MoveObjects(objs, (target))
 
-def getRhinoVersion():
-    version = str(Rhino.RhinoApp.ExeVersion)
 
-    if version=='5':
-        version = 5
-    elif version=='6':
-        version = 6
-    elif version=='7':
-        version = 7
-    else:
-        return False
-    return version
 
 if __name__ == '__main__':
-    addPartList()
+    main()

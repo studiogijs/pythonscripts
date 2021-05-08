@@ -17,6 +17,9 @@ def alignDetails():
     """
     #set focus back to page
     pageview = sc.doc.Views.ActiveView
+    if type(pageview) != Rhino.Display.RhinoPageView:
+        print "This tool only works in layout space."
+        return
     pageview.SetPageAsActive()
 
     child = rs.GetObject("select detail to change")
