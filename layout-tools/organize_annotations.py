@@ -3,10 +3,10 @@ import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import System.Drawing.Color as Col
 
-def organizeAnnotations():
+def organize_annotations():
     """
-    puts all dimensions found in all pages on layer 'dim' and annotations on 'annotation'
-    creates layer called 'dim' + 'annotation' if it doesn't exist and changes its color to black
+    - puts all dimensions found in all pages on layer 'dim' and annotations on 'annotation'
+    - creates layer called 'dim' + 'annotation' if it doesn't exist and changes its color to black
     version 1.0
     www.studiogijs.nl
     """
@@ -29,4 +29,4 @@ def organizeAnnotations():
             rs.ObjectLayer(obj, "dim")
 
 if __name__ == '__main__':
-    organizeAnnotations() 
+    organize_annotations() 

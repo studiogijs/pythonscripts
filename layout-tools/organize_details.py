@@ -3,10 +3,10 @@ import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import System.Drawing.Color as Col
 
-def organizeDetails():
+def organize_details():
     """
-    puts all details on layer 'details'
-    creates layer called 'details' if it doesn't exist and changes its color to green
+    - puts all details on layer 'details'
+    - creates layer called 'details' if it doesn't exist and changes its color to green
     version 1.0
     www.studiogijs.nl
     """
@@ -22,4 +22,4 @@ def organizeDetails():
             rs.ObjectLayer(details, "details")
 
 if __name__ == '__main__':
-    organizeDetails() 
+    organize_details() 

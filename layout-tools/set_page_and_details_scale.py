@@ -5,7 +5,7 @@ import page_scale_helpers as psh
 
 def main():
     """
-    set page scale and change all details to the same scale. Adds 'page_scale'
+    Sets page scale and changes all details to the same scale. Adds 'page_scale'
     user text key and value to the page and detail_scale user text to details
     """
     

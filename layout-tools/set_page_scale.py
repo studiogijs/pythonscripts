@@ -5,7 +5,9 @@ import page_scale_helpers as psh
 
 def main():
     """
-    set page scale by adding 'page_scale' user text key and value
+    - Sets page scale by adding 'page_scale' user text key and value
+    version 1.0
+    www.studiogijs.nl
     """
     
     pageview = sc.doc.Views.ActiveView

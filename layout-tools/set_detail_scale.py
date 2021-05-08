@@ -5,7 +5,7 @@ import page_scale_helpers as psh
 
 def main():
     """
-    sets a predefined scale from a list for selected detail(s), defaults to page scale
+    - sets a predefined scale from a list for selected detail(s), defaults to page scale
     
     version 0.2
     www.studiogijs.nl

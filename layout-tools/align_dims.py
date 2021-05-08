@@ -2,7 +2,7 @@ import rhinoscriptsyntax as rs
 import Rhino
 import scriptcontext as sc
 
-def alignDims():
+def align_dims():
     if not sc.doc.Views.ActiveView.ActiveViewport.CameraZ == Rhino.Geometry.Plane.WorldXY.ZAxis:
         print "this works only in top view (world XY)"
         return
@@ -14,15 +14,13 @@ def alignDims():
     """
 
     dims = rs.GetObjects("select dims to align", preselect = True, filter = 512)
-    p_ref = rs.GetPoint("set basepoint for the dimensions", in_plane = True)
-
-    p_ref = rs.coerce3dpoint(p_ref)
-
     if not dims:
         return
+    p_ref = rs.GetPoint("set basepoint for the dimensions", in_plane = True)
     if not p_ref:
         return
-    #dimref = rs.coercerhinoobject(dimref)
+    p_ref = rs.coerce3dpoint(p_ref)
+
     dims = [rs.coercerhinoobject(dim) for dim in dims]
     for dim in dims:
 
@@ -65,4 +63,4 @@ def alignDims():
         dim.Geometry.SetLocations(e1_new,e2_new,dp_new)
         dim.CommitChanges()
 if __name__ == '__main__':
-    alignDims()
+    align_dims()
