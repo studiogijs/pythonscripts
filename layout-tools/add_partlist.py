@@ -64,7 +64,8 @@ def get_block_names():
     return False
 
 def create_table(partlist):
-    if not "partlistgroup" in rs.GroupNames():
+    g = rs.GroupNames()
+    if not g or not "partlistgroup" in g:
         rs.AddGroup("partlistgroup")
     #clean the group
     group= sc.doc.Groups.FindName("partlistgroup")
