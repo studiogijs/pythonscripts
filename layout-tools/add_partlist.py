@@ -22,6 +22,9 @@ def main():
     partlist = []
     texts = []
     blocknames=get_block_names()
+    if not blocknames:
+        print "This file does not contain block items (titleblock will be ignored)"
+        return
     for block_nr, blockname in enumerate(blocknames,1):
         texts.append(str(block_nr))
         texts.append(blockname)
