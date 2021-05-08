@@ -4,7 +4,10 @@ import rhinoscriptsyntax as rs
 from System.Drawing import Color
 from Rhino.Geometry import *
 from math import pi as pi
-from System.Drawing import Size
+from System.Drawing import Size, Bitmap
+import System.String
+
+
 
 def createProjectedDetail():
     """
@@ -111,18 +114,18 @@ def createProjectedDetail():
                 view.ActiveViewport.KeyboardRotate(False,angle)#rotate down
             else:#Y>0
                 view.ActiveViewport.KeyboardRotate(False,-angle)#rotate up
-    global rot
-    rot=""
+
     def OnDynamicDraw(sender, e):
+        
+        try:
+            rot
+        except:
+            rot="" #initialize rot only once
         plane = Plane(ptLL, Plane.WorldXY.ZAxis)
         sizeX = ptLR.X-ptLL.X #width of selected detail
         sizeY = ptUR.Y-ptLR.Y #height of selected detail
-        global rot
-        
-        
         vec = e.CurrentPoint-basept
         size = Size(sizeX, sizeY)
-        global viewport
         if abs(vec.X)>abs(vec.Y):
             if vec.X>0:
                 translate = Vector3d(sizeX,0,0)
@@ -141,23 +144,17 @@ def createProjectedDetail():
                 translate = Vector3d(0,-sizeY,0)
                 if rot!="down":
                     rot="down"
-                    #rotateViewport(vec)
-                    bitmap = e.Display.DrawToBitmap(viewport, sizeX, sizeY)
-                    
+    
         else:
             translate = vec
         xf = Transform.Translation(translate)
-        
-        
         newobj = Rectangle3d(plane,sizeX,sizeY)
         crv  = newobj.ToNurbsCurve()
-        
         preview=crv.Duplicate()
         preview.Transform(xf)
         e.Display.DrawCurve(preview, Color.LightCyan, 2)
-        
-        e.Display.DrawBitmap(bitmap, 0,0)
-        
+
+
     def getPoint():
         
         while True:
@@ -175,19 +172,14 @@ def createProjectedDetail():
     pageview = sc.doc.Views.ActiveView
     pageview.SetPageAsActive()
     filter = Rhino.DocObjects.ObjectType.Detail
-    rc, objref = Rhino.Input.RhinoGet.GetOneObject("Select detail to rename", False, filter)
+    rc, objref = Rhino.Input.RhinoGet.GetOneObject("Select detail to create projected drawing of", False, filter)
     if not objref or rc != Rhino.Commands.Result.Success: 
         return
-    
+
     detail_obj = objref.Object()
     if not isinstance(detail_obj, Rhino.DocObjects.DetailViewObject):
         return
-    global viewport
-    viewport = detail_obj.Viewport
-    
-
-    
-    
+        
     #get lower left and lower right and upper right points of selected detail view
     ptLL = Point3d(0,0,0)
     ptLR = Point3d(0,0,0)
@@ -274,12 +266,7 @@ def createProjectedDetail():
     else:
         restoreOsnap()
         return
-    
-    
-    
 
-    
-    
     rotateViewport(vect)
     viewport = d.Viewport
     title = viewport.Name
@@ -291,8 +278,6 @@ def createProjectedDetail():
     restoreOsnap()
     sc.doc.Views.Redraw()
     rs.EnableRedraw(True)
-    
-
 
 if __name__=="__main__":
     createProjectedDetail()
