@@ -8,8 +8,10 @@ def main():
     Creates a part list for all blocks in a document. Numbers will correspond with 
     balloons, but balloons don't need to be present for the table to be generated
     
-    version 1.0
+    version 1.1
     www.studiogijs.nl
+    
+    version 1.1 adds table heading
     """
     previous_layer = rs.CurrentLayer()
     #check if layer 'annotation' exist, else create it
@@ -20,11 +22,15 @@ def main():
     
     groups = sc.doc.ActiveDoc.Groups
     partlist = []
-    texts = []
+    
     blocknames=get_block_names()
     if not blocknames:
         print "This file does not contain block items (titleblock will be ignored)"
         return
+    #add headings
+    texts = ["ITEM", "PART NAME", "QTY"]
+    partlist.append(texts)
+    texts=[]
     for block_nr, blockname in enumerate(blocknames,1):
         texts.append(str(block_nr))
         texts.append(blockname)
@@ -59,7 +65,7 @@ def get_block_names():
         if block.Name!= None and block.Name!="titleblock":
             blocknames.append(block.Name)
     
-    if len(blocknames)>0:
+    if len(blocknames)>1:
        return blocknames
     return False
 
@@ -72,19 +78,18 @@ def create_table(partlist):
     objs = sc.doc.ActiveDoc.Groups.GroupMembers(group.Index)
     rs.DeleteObjects(objs)
     
-    #rs.DeleteObjects
-    twidth = 100
+    twidth = 110
     def addTexts(texts, y):
         for i,text in enumerate(texts):
             if i==0:
-                a=6
+                a=10
                 just = Rhino.Geometry.TextJustification.BottomRight
                 
             elif i==1:
-                a=9.5
+                a=13.5
                 just = Rhino.Geometry.TextJustification.BottomLeft
             else:
-                a=14+twidth
+                a=20+twidth
                 just = Rhino.Geometry.TextJustification.BottomRight
             plane = Rhino.Geometry.Plane.WorldXY
             plane.Origin = Rhino.Geometry.Point3d(a, y-4, 0)
@@ -118,7 +123,7 @@ def create_table(partlist):
     def add_borders(i,y):
         
         start = Rhino.Geometry.Point3d(0,y-6,0)
-        end = Rhino.Geometry.Point3d(16+twidth,y-6,0)
+        end = Rhino.Geometry.Point3d(22+twidth,y-6,0)
         line = sc.doc.Objects.AddLine(start, end) #bottom border
         rs.AddObjectToGroup(line, "partlistgroup")
         if i==0:
@@ -136,7 +141,7 @@ def create_table(partlist):
         line = sc.doc.Objects.AddLine(v_line)
         rs.AddObjectToGroup(line, "partlistgroup")
         
-        trans = Rhino.Geometry.Transform.Translation(8,0,0)
+        trans = Rhino.Geometry.Transform.Translation(12,0,0)
         v_line.Transform(trans)
         line = sc.doc.Objects.AddLine(v_line)
         rs.AddObjectToGroup(line, "partlistgroup")
@@ -146,7 +151,7 @@ def create_table(partlist):
         line = sc.doc.Objects.AddLine(v_line)
         rs.AddObjectToGroup(line, "partlistgroup")
         
-        trans = Rhino.Geometry.Transform.Translation(8,0,0)
+        trans = Rhino.Geometry.Transform.Translation(10,0,0)
         v_line.Transform(trans)
         line = sc.doc.Objects.AddLine(v_line)
         rs.AddObjectToGroup(line, "partlistgroup")
