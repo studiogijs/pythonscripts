@@ -3,7 +3,6 @@ import scriptcontext as sc
 import Rhino
 import System.Drawing.Color as Col
 
-
 def main():
     """
     Creates a part list for all blocks in a document. Numbers will correspond with 
