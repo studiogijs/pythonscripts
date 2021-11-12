@@ -9,7 +9,7 @@ def reflectLight():
     
     """
     
-    This script will place a (pre)selected light on a surface, polysurface or mesh face by reflection
+    This script will place a (pre)selected light on a surface, polysurface, subd or mesh face by reflection
     After the script has run, it will select the modified light, so you can quickly repeat
     the placement with this light
     script by Gijs de Zwart
@@ -17,7 +17,8 @@ def reflectLight():
     
     """
     
-    object = rs.GetObject("select light", preselect=True, filter=256)
+    object = rs.GetObject("select light", preselect=True, filter=262400)
+    
     if not object:
         return
     light = rs.coercerhinoobject(object)
@@ -29,7 +30,7 @@ def reflectLight():
     
     if not obj:
         return
-    if type(rs.coercerhinoobject(obj))==Rhino.DocObjects.BrepObject:
+    if type(rs.coercerhinoobject(obj))==Rhino.DocObjects.BrepObject or type(rs.coercerhinoobject(obj))==Rhino.DocObjects.SubDObject:
         pt = rs.GetPointOnSurface(obj)
         if not pt:
             return
@@ -41,6 +42,7 @@ def reflectLight():
         if not normal:
             print "could not calculate surface normal"
             return
+
     else:
         pt = rs.GetPointOnMesh(obj)
         if not pt:
