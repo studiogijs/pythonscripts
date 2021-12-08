@@ -8,11 +8,22 @@ def main():
     Creates a part list for all blocks in a document. Numbers will correspond with 
     balloons, but balloons don't need to be present for the table to be generated
     
-    version 1.1
+    version 1.2
     www.studiogijs.nl
     
     version 1.1 adds table heading
+    version 1.2 option for choosing between all or only top level blocks
+   
     """
+    t = sc.sticky['top_level_only'] if sc.sticky.has_key('top_level_only') else 0 #0 = top level only, 1= all blocks
+    if t==None:
+        t=0
+    top_level_only = rs.GetBoolean("annotate top level blocks only?", ["top_level_only", "yes", "no"],t)
+    if not top_level_only:
+        return
+    sc.sticky['top_level_only'] = top_level_only[0]
+    
+    
     previous_layer = rs.CurrentLayer()
     #check if layer 'annotation' exist, else create it
     if not rs.IsLayer("annotation"): rs.AddLayer("annotation")
@@ -63,9 +74,10 @@ def get_block_names():
     blocknames=[]
     for block in blocks:
         if block.Name!= None and block.Name!="titleblock":
-            blocknames.append(block.Name)
+            if rs.IsBlockInUse(block.Name, where_to_look=sc.sticky['top_level_only']):
+                blocknames.append(block.Name)
     
-    if len(blocknames)>1:
+    if len(blocknames)>0:
        return blocknames
     return False
 

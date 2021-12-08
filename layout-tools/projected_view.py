@@ -211,7 +211,7 @@ def create_projected_detail():
             translation = rs.VectorSubtract(ptUR, ptLR) # up
     
     #create new detail
-    rs.EnableRedraw(False)
+    rs.EnableRedraw = False
     newdetail = rs.CopyObject(detail_obj, translation)
     d = rs.coercerhinoobject(newdetail)
     lockedstate = d.DetailGeometry.IsProjectionLocked
@@ -267,8 +267,7 @@ def create_projected_detail():
     sc.doc.Views.ActiveView.SetPageAsActive()
     restore_osnap()
     sc.doc.Views.Redraw()
-    rs.EnableRedraw(True)
-
+    rs.EnableRedraw = True
 if __name__=="__main__":
     create_projected_detail()
     

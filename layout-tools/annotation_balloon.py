@@ -3,13 +3,16 @@ import Rhino
 import scriptcontext as sc
 import System.Drawing.Color as Col
 
+
+
 def get_block_index(blockname):
     #blockcount = sc.doc.ActiveDoc.InstanceDefinitions.ActiveCount
     blocks = sc.doc.ActiveDoc.InstanceDefinitions
     blocknames=[]
     for block in blocks:
         if block.Name!= None and block.Name!="titleblock":
-            blocknames.append(block.Name)
+            if rs.IsBlockInUse(block.Name, where_to_look=sc.sticky['top_level_only']):
+                blocknames.append(block.Name)
     return blocknames.index(blockname)
     
 
@@ -19,7 +22,16 @@ def annotation_balloon():
     Works only with block items, similar to how this works in 'solid modelers'
     on parts in assemblies
     www.studiogijs.nl
+    
+    version 1.1: option for choosing between all or only top level blocks
+    
     """
+    
+    t = sc.sticky['top_level_only'] if sc.sticky.has_key('top_level_only') else 0 #0 = top level only, 1= all blocks
+    if t==None:
+        t=0
+    top_level_only = rs.GetBoolean("annotate top level blocks only?", ["top_level_only", "yes", "no"],t)
+    sc.sticky['top_level_only'] = top_level_only[0]
     
     name = get_blockname()
     if not name:
