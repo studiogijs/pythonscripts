@@ -31,6 +31,8 @@ def annotation_balloon():
     if t==None:
         t=0
     top_level_only = rs.GetBoolean("annotate top level blocks only?", ["top_level_only", "yes", "no"],t)
+    if not top_level_only:
+        return
     sc.sticky['top_level_only'] = top_level_only[0]
     
     name = get_blockname()
