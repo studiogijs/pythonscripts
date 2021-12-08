@@ -8,11 +8,13 @@ def main():
     Creates a part list for all blocks in a document. Numbers will correspond with 
     balloons, but balloons don't need to be present for the table to be generated
     
-    version 1.2
+    version 1.3
     www.studiogijs.nl
     
     version 1.1 adds table heading
     version 1.2 option for choosing between all or only top level blocks
+    version 1.3 adds block description. Use change_block_description.py
+    or change in block manager
    
     """
     t = sc.sticky['top_level_only'] if sc.sticky.has_key('top_level_only') else 0 #0 = top level only, 1= all blocks
@@ -39,15 +41,18 @@ def main():
         print "This file does not contain block items (titleblock will be ignored)"
         return
     #add headings
-    texts = ["ITEM", "PART NAME", "QTY"]
+    texts = ["ITEM", "PART NAME","DESCR", "QTY"]
     partlist.append(texts)
     texts=[]
     for block_nr, blockname in enumerate(blocknames,1):
         texts.append(str(block_nr))
         texts.append(blockname)
+        description = rs.BlockDescription(blockname)
+        if description is None:
+            description = ""
+        texts.append(description)
         blockcount = get_block_count(blockname)
         texts.append(str(blockcount))
-
         partlist.append(texts)
         texts=[]
     create_table(partlist)
@@ -73,14 +78,22 @@ def get_block_names():
     blocks = sc.doc.ActiveDoc.InstanceDefinitions
     blocknames=[]
     for block in blocks:
-        if block.Name!= None and block.Name!="titleblock":
+        if block.Name!= None and not block.Name.__contains__("titleblock"):
             if rs.IsBlockInUse(block.Name, where_to_look=sc.sticky['top_level_only']):
                 blocknames.append(block.Name)
     
     if len(blocknames)>0:
        return blocknames
     return False
-
+def get_block_descriptions(blocknames):
+    descriptions = []
+    for blockname in blocknames:
+        description = rs.BlockDescription(blockname)
+        if description is None:
+            description = ""
+        descriptions.append(description)
+    return descriptions
+    
 def create_table(partlist):
     g = rs.GroupNames()
     if not g or not "partlistgroup" in g:
@@ -89,8 +102,12 @@ def create_table(partlist):
     group= sc.doc.Groups.FindName("partlistgroup")
     objs = sc.doc.ActiveDoc.Groups.GroupMembers(group.Index)
     rs.DeleteObjects(objs)
-    
-    twidth = 110
+    #base table width on largest name
+    blocknames = get_block_names()
+    twidth = 3 + max(blocknames, key = len).Length*2.1
+    desc = 3 + max(get_block_descriptions(blocknames), key = len).Length*2.1
+    if desc < 3+ 5*2.1:
+        desc = 3+ 5*2.1
     def addTexts(texts, y):
         for i,text in enumerate(texts):
             if i==0:
@@ -100,8 +117,11 @@ def create_table(partlist):
             elif i==1:
                 a=13.5
                 just = Rhino.Geometry.TextJustification.BottomLeft
+            elif i==2:
+                a=13.5+twidth
+                just = Rhino.Geometry.TextJustification.BottomLeft
             else:
-                a=20+twidth
+                a=20+twidth+desc
                 just = Rhino.Geometry.TextJustification.BottomRight
             plane = Rhino.Geometry.Plane.WorldXY
             plane.Origin = Rhino.Geometry.Point3d(a, y-4, 0)
@@ -135,7 +155,7 @@ def create_table(partlist):
     def add_borders(i,y):
         
         start = Rhino.Geometry.Point3d(0,y-6,0)
-        end = Rhino.Geometry.Point3d(22+twidth,y-6,0)
+        end = Rhino.Geometry.Point3d(22+twidth+desc,y-6,0)
         line = sc.doc.Objects.AddLine(start, end) #bottom border
         rs.AddObjectToGroup(line, "partlistgroup")
         if i==0:
@@ -163,6 +183,11 @@ def create_table(partlist):
         line = sc.doc.Objects.AddLine(v_line)
         rs.AddObjectToGroup(line, "partlistgroup")
         
+        trans = Rhino.Geometry.Transform.Translation(desc,0,0)
+        v_line.Transform(trans)
+        line = sc.doc.Objects.AddLine(v_line)
+        rs.AddObjectToGroup(line, "partlistgroup")
+        
         trans = Rhino.Geometry.Transform.Translation(10,0,0)
         v_line.Transform(trans)
         line = sc.doc.Objects.AddLine(v_line)
@@ -177,13 +202,13 @@ def create_table(partlist):
             target[0] = point[0]
             target[1] = point[1]
         elif listIndex == 1: #lower right
-            target[0] =point[0]-(22+twidth)
+            target[0] =point[0]-(22+twidth+desc)
             target[1] = point[1]
         elif listIndex == 2: #upper left
             target[0] = point[0]
             target[1] = point[1]-len(partlist)*6
         else: #upper right
-            target[0] =point[0]-(22+twidth)
+            target[0] =point[0]-(22+twidth+desc)
             target[1] = point[1]-len(partlist)*6
             
     for i, texts in enumerate(partlist):

@@ -10,7 +10,7 @@ def get_block_index(blockname):
     blocks = sc.doc.ActiveDoc.InstanceDefinitions
     blocknames=[]
     for block in blocks:
-        if block.Name!= None and block.Name!="titleblock":
+        if block.Name!= None and not block.Name.__contains__("titleblock"):
             if rs.IsBlockInUse(block.Name, where_to_look=sc.sticky['top_level_only']):
                 blocknames.append(block.Name)
     return blocknames.index(blockname)
