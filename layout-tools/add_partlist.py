@@ -177,13 +177,13 @@ def create_table(partlist):
             target[0] = point[0]
             target[1] = point[1]
         elif listIndex == 1: #lower right
-            target[0] =point[0]-(16+twidth)
+            target[0] =point[0]-(22+twidth)
             target[1] = point[1]
         elif listIndex == 2: #upper left
             target[0] = point[0]
             target[1] = point[1]-len(partlist)*6
         else: #upper right
-            target[0] =point[0]-(16+twidth)
+            target[0] =point[0]-(22+twidth)
             target[1] = point[1]-len(partlist)*6
             
     for i, texts in enumerate(partlist):
