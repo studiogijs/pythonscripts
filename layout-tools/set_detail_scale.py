@@ -12,7 +12,7 @@ def main():
     """
     pageview = sc.doc.Views.ActiveView
     if type(pageview) != Rhino.Display.RhinoPageView:
-        print "This tool only works in layout space."
+        print ("This tool only works in layout space.")
         return
     details = rs.GetObjects("select detail(s) to change scale",32768, preselect=True)
     if not details:

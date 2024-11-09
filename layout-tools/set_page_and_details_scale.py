@@ -11,14 +11,14 @@ def main():
     
     pageview = sc.doc.Views.ActiveView
     if type(pageview) != Rhino.Display.RhinoPageView:
-        print "This tool only works in layout space."
+        print ("This tool only works in layout space.")
         return
     pagescale = psh.change_page_scale()#returns readable scale e.g. 1:5, 2:1
     
     if not pagescale:
         return
     scale = psh.get_scale(pagescale)#returns page scale ratio e.g 0.2, 2.0
-    print scale
+    print (scale)
     details = pageview.GetDetailViews()
     if not details:
         return

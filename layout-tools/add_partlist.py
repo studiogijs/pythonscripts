@@ -1,7 +1,7 @@
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Rhino
-import System.Drawing.Color as Col
+from System.Drawing import Color as Col
 
 def main():
     """
@@ -17,9 +17,9 @@ def main():
     or change in block manager
    
     """
-    t = sc.sticky['top_level_only'] if sc.sticky.has_key('top_level_only') else 0 #0 = top level only, 1= all blocks
+    t = sc.sticky['top_level_only'] if sc.sticky.has_key('top_level_only') else False #0 = top level only, 1= all blocks
     if t==None:
-        t=0
+        t=False
     top_level_only = rs.GetBoolean("annotate top level blocks only?", ["top_level_only", "yes", "no"],t)
     if not top_level_only:
         return
@@ -38,7 +38,7 @@ def main():
     
     blocknames=get_block_names()
     if not blocknames:
-        print "This file does not contain block items (titleblock will be ignored)"
+        print ("This file does not contain block items (titleblock will be ignored)")
         return
     #add headings
     texts = ["ITEM", "PART NAME","DESCR", "QTY"]
@@ -104,8 +104,8 @@ def create_table(partlist):
     rs.DeleteObjects(objs)
     #base table width on largest name
     blocknames = get_block_names()
-    twidth = 3 + max(blocknames, key = len).Length*2.1
-    desc = 3 + max(get_block_descriptions(blocknames), key = len).Length*2.1
+    twidth = 3 + len(max(blocknames, key = len))*2.1
+    desc = 3 + len(max(get_block_descriptions(blocknames), key = len))*2.1
     if desc < 3+ 5*2.1:
         desc = 3+ 5*2.1
     def addTexts(texts, y):

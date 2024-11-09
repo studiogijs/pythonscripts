@@ -17,9 +17,9 @@ def change_block_description():
 
     desc = rs.BlockDescription(block.Name)
     if desc == None:
-        print "Current description not set"
+        print ("Current description not set")
     else:
-        print "Current description: " + desc
+        print ("Current description: " + desc)
     newdesc = rs.GetString("Set new description, to use spaces enter description between \" \"")
     if newdesc:
         rs.BlockDescription(block.Name, newdesc)

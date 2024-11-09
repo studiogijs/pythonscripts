@@ -4,7 +4,7 @@ import scriptcontext as sc
 
 def align_dims():
     if not sc.doc.Views.ActiveView.ActiveViewport.CameraZ == Rhino.Geometry.Plane.WorldXY.ZAxis:
-        print "this works only in top view (world XY)"
+        print("this works only in top view (world XY)")
         return
 
     """
@@ -12,7 +12,7 @@ def align_dims():
     version 1.0
     www.studiogijs.nl
     """
-
+   
     dims = rs.GetObjects("select dims to align", preselect = True, filter = 512)
     if not dims:
         return
@@ -20,6 +20,21 @@ def align_dims():
     if not p_ref:
         return
     p_ref = rs.coerce3dpoint(p_ref)
+    
+    dims = [dim for dim in dims if rs.IsText(dim)==False]
+    
+    purge_before = False
+    for dim in dims:
+        has_history = sc.doc.Objects.Find(dim).HasHistoryRecord()
+        if has_history:
+            print("One or more dimensions have history enabled, and cannot be changed")
+            purge_before = rs.GetBoolean("Purge the history of these dims before continuing?", ["Purge", "no", "yes"], False)
+           
+            break
+    if purge_before:
+        rs.UnselectAllObjects()
+        rs.SelectObjects(dims)
+        rs.Command("_HistoryPurge")
 
     dims = [rs.coercerhinoobject(dim) for dim in dims]
     for dim in dims:

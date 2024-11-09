@@ -2,7 +2,7 @@ import Rhino
 import scriptcontext as sc
 import rhinoscriptsyntax as rs
 from System.Drawing import Color
-from Rhino.Geometry import *
+from Rhino.Geometry import Point3d, Vector3d, Plane, Transform, Rectangle3d
 from math import pi as pi
 
 
@@ -43,7 +43,7 @@ def create_projected_detail():
         if Rhino.ApplicationSettings.ViewSettings.RotateReverseKeyboard: angle = -angle
         if abs(vect.X)>abs(vect.Y): #make horizontal view
             if VP==1 or VP==4:
-                print"Can't make a correct projection of this view on left or right"
+                print ("Can't make a correct projection of this view on left or right")
                 rs.DeleteObject(newdetail)
                 restore_osnap()
                 return
@@ -118,10 +118,8 @@ def create_projected_detail():
 
     def OnDynamicDraw(sender, e):
         
-        try:
-            rot
-        except:
-            rot="" #initialize rot only once
+        
+        rot=""
         plane = Plane(ptLL, Plane.WorldXY.ZAxis)
         sizeX = ptLR.X-ptLL.X #width of selected detail
         sizeY = ptUR.Y-ptLR.Y #height of selected detail
@@ -258,11 +256,11 @@ def create_projected_detail():
     new_view_name = rotate_viewport(vect)
     viewport = d.Viewport
     title = viewport.Name
-    print viewport.Name
+    print (viewport.Name)
     viewport.Name = new_view_name
     
     d.DetailGeometry.IsProjectionLocked = lockedstate
-    print d.CommitViewportChanges()
+    print (d.CommitViewportChanges())
     #d.CommitChanges()
     sc.doc.Views.ActiveView.SetPageAsActive()
     restore_osnap()

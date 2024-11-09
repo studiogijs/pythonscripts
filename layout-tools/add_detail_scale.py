@@ -17,7 +17,7 @@ def main():
     pageview = sc.doc.Views.ActiveView
     
     if type(pageview) != Rhino.Display.RhinoPageView:
-        print "This tool works only in layout space."
+        print ("This tool works only in layout space.")
         return
     
     details = rs.GetObjects("select detail(s) to add detail info to",32768, preselect=True)
@@ -43,7 +43,7 @@ def add_detail_scale(detail):
         else:
             text = "1:" + str(int(1/ratio))
         if page_scale == text:
-            print "At least one detail has the same scale as the page scale, no scale info to this detail was added."
+            print ("At least one detail has the same scale as the page scale, no scale info to this detail was added.")
             return
         else:
             pt = [0,0,0]

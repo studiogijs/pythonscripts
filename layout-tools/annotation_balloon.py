@@ -1,7 +1,9 @@
 import rhinoscriptsyntax as rs
 import Rhino
 import scriptcontext as sc
-import System.Drawing.Color as Col
+import System
+from System.Drawing import Color as Col
+
 
 
 
@@ -27,9 +29,9 @@ def annotation_balloon():
     
     """
     
-    t = sc.sticky['top_level_only'] if sc.sticky.has_key('top_level_only') else 0 #0 = top level only, 1= all blocks
+    t = sc.sticky['top_level_only'] if sc.sticky.has_key('top_level_only') else False #0 = top level only, 1= all blocks
     if t==None:
-        t=0
+        t=False
     top_level_only = rs.GetBoolean("annotate top level blocks only?", ["top_level_only", "yes", "no"],t)
     if not top_level_only:
         return

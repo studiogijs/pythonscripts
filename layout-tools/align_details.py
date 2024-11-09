@@ -18,7 +18,7 @@ def align_details():
     #set focus back to page
     pageview = sc.doc.Views.ActiveView
     if type(pageview) != Rhino.Display.RhinoPageView:
-        print "This tool only works in layout space."
+        print ("This tool only works in layout space.")
         return
     pageview.SetPageAsActive()
 
@@ -84,7 +84,7 @@ def align_details():
             
     rc = align(DP,DC)
     if not rc:
-        print "These two viewports cannot be matched"
+        print ("These two viewports cannot be matched")
     sc.doc.Views.ActiveView.SetPageAsActive()
     sc.doc.Views.Redraw()
 

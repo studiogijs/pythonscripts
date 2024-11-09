@@ -12,7 +12,7 @@ def main():
     
     pageview = sc.doc.Views.ActiveView
     if type(pageview) != Rhino.Display.RhinoPageView:
-        print "This tool only works in layout space."
+        print ("This tool only works in layout space.")
         return
     psh.change_page_scale()
 

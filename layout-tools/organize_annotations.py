@@ -1,7 +1,7 @@
 import Rhino
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
-import System.Drawing.Color as Col
+from System.Drawing import Color as Col
 
 def organize_annotations():
     """
